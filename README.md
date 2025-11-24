@@ -1,69 +1,89 @@
-Predicting California Housing Prices with Linear Regression
-🎯 Project Goal
-The objective of this project is to build a multiple linear regression model to predict the median housing value in California districts based on various features from the 1990 census data.
+## California Housing Risk Radar
 
-📊 Dataset
-This project uses the classic California Housing Prices dataset, which contains data for 20,640 census block groups in California. The dataset includes 9 features such as median income, housing median age, and location (latitude/longitude), along with the target variable, median_house_value.
+This repository showcases a complete research-to-production workflow for assessing California housing valuations—framed for economics and finance roles where evidence-based investment or policy recommendations are key.
 
-📋 Project Workflow
-The project followed a standard machine learning workflow:
+### Why it matters for hiring managers
+- **Macro + micro view**: marries census microdata with domain features (affordability ratios, coastal exposure) to surface tract-level risk signals.
+- **Reproducible analytics**: deterministic pipeline (`scripts/run_pipeline.py`) plus unit tests demonstrate engineering rigor and auditability.
+- **Commercial insight**: feature importance highlights the levers (income, household density, coastal premium) that investors and policy analysts monitor when sizing supply-demand imbalances.
 
-Data Loading & Initial Exploration: Loaded the dataset and performed an initial inspection to understand its structure and identify issues like missing data.
+---
 
-Data Cleaning & Preprocessing: Handled missing values, engineered new features, and encoded categorical data.
+### Headline results (test set)
 
-Exploratory Data Analysis (EDA): Used visualizations to uncover patterns, identify key predictors, and understand feature relationships.
+| Model | R² | RMSE (USD) | MAE (USD) | MAPE |
+| --- | --- | --- | --- | --- |
+| Elastic Net (baseline) | 0.64 | 69,156 | 49,633 | 28.8% |
+| **HistGradientBoost (selected)** | **0.84** | **45,897** | **30,175** | **17.0%** |
 
-Feature Selection: Chose the most relevant features for the model based on EDA.
+Artifacts live in `reports/metrics.json` and `reports/figures/hist_gradient_boost_feature_importance.png`.
 
-Model Training: Split the data into training and testing sets and trained a LinearRegression model.
+![Top price drivers](reports/figures/hist_gradient_boost_feature_importance.png)
 
-Model Evaluation: Evaluated the model's performance on the test set using standard regression metrics.
+Key economic takeaways:
+- Median income remains the dominant price signal even after controlling for density and age effects.
+- Household crowding (`population_per_household`) and supply constraints (`rooms_per_household`) explain variance inland, highlighting affordability stress pockets.
+- Being within an hour of the ocean maintains a persistent premium despite 1990-era data, reinforcing the scarcity narrative for coastal permits.
 
-🧹 Data Cleaning & Preprocessing
-The initial inspection revealed that the total_bedrooms column contained 207 missing values. These were imputed using the median value of the column.
+---
 
-Several new features were engineered to provide more context for the model:
+### Repository tour
 
-rooms_per_household
+```
+.
+├── config/                 # YAML-configured experiment settings
+├── docs/                   # Portfolio narratives & planning notes
+├── notebook/               # Exploratory analysis (Jupyter)
+├── reports/                # Auto-generated metrics + figures
+├── scripts/                # CLI entry points (train pipeline)
+├── src/housing_prices/     # Modular package: data, features, modeling
+├── tests/                  # Regression + feature-engineering tests
+├── Makefile                # One-line install / test / train commands
+└── requirements.txt        # Runtime dependencies
+```
 
-bedrooms_per_room
+Core modules:
+- `config.py`: loads human-readable YAML for experiment parameters.
+- `data.py` & `features.py`: handle ingestion, cleaning, and engineered ratios relevant to affordability analysis.
+- `modeling.py`: compares regularized linear models vs. gradient boosting; stores metrics for resume-ready storytelling.
+- `visualization.py`: automatically exports the most material drivers for slide decks or conversations.
 
-population_per_household
+---
 
-The categorical feature, ocean_proximity, was converted into numerical format using one-hot encoding to be used in the model.
+### Quick start (macOS / Linux / WSL)
 
-📈 Exploratory Data Analysis (EDA)
-The EDA revealed several key insights:
+```bash
+git clone https://github.com/Sankalp232004/california-housing-project.git
+cd california-housing-project
+python3.12 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+pip install -e '.[dev]'
 
-The strongest predictor of housing prices is median_income, showing a clear positive linear relationship.
+# Train models & regenerate reports
+python scripts/run_pipeline.py
 
-A geographical plot of latitude and longitude showed that housing prices are significantly higher in coastal areas, especially around the San Francisco Bay Area and Southern California.
+# Run unit tests
+pytest
 
-🤖 Modeling & Evaluation
-A multiple linear regression model was trained on the preprocessed data to predict median_house_value. The model's performance was evaluated on the unseen test set, yielding the following results:
+# Optional: reproduce visuals in the notebook
+code notebook/housing_analysis.ipynb
+```
 
-R-squared (R²): 0.60
+Prefer Make targets? `make install`, `make train`, `make test` are available.
 
-This indicates that the model successfully explains approximately 60% of the variance in California housing prices based on the selected features.
+---
 
-Mean Absolute Error (MAE): $50,888.66
+### Methodology snapshot
+1. **Feature engineering** – builds affordability ratios (`rooms_per_household`, `population_per_household`, `bedrooms_per_room`) and macro-style indicators (`income_to_age_ratio`, coastal dummy) to mimic due-diligence heuristics.
+2. **Preprocessing** – ColumnTransformer with median imputation + scaling for numerics, frequency encoding for categories.
+3. **Model comparison** – Elastic Net for interpretability and HistGradientBoost for non-linear uplift; selection based on lowest RMSE.
+4. **Reporting** – writes JSON + PNG assets for portfolio decks and recruiters.
 
-On average, the model's predictions are off by about $50,889.
+---
 
-Root Mean Squared Error (RMSE): $72,668.54
+### Extending the work
+- Swap `config/project.yaml` parameters (test split, hyper-parameters) to simulate different macro scenarios.
+- Drop in fresh census/ACS feeds at `data/housing.csv`—the package infers schema automatically.
+- Use the exported metrics and figure in presentations or add more notebooks for localized case studies.
 
-This is another measure of prediction error, which penalizes larger errors more heavily.
-
-🛠️ Tools Used
-Language: Python
-
-Libraries:
-
-Pandas & NumPy (Data Manipulation)
-
-Matplotlib & Seaborn (Data Visualization)
-
-Scikit-learn (Model Training & Evaluation)
-
-Environment: Jupyter Notebook
+For a concise storytelling aid, see `docs/portfolio_brief.md`. Implementation notes live in `docs/PROJECT_PLAN.md`.

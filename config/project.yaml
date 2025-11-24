@@ -1,0 +1,13 @@
+project_name: california-housing-portfolio
+raw_data_path: data/housing.csv
+target_column: median_house_value
+test_size: 0.2
+random_state: 42
+alpha: 0.0005
+l1_ratio: 0.2
+gradient_boosting:
+  learning_rate: 0.08
+  max_depth: 5
+  n_estimators: 400
+top_feature_count: 12
+report_dir: reports
